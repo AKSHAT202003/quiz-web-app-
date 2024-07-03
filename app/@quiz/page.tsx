@@ -7,74 +7,56 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Player } from "@lottiefiles/react-lottie-player";
 
-type questionT = {
-  answers: string[],
-  category: string,
-  correct_answer: string,
-  incorrect_answers: string[],
-  difficulty: string,
-  type: string
-}
+ type questionT= 
+  {answers:string[],category:string,correct_answer:string,incorrect_answers:string[],difficulty:string,type:string}
 
 export default function Quiz() {
-  const [questions, setQuestions] = useState<questionT[] | null>(null);
+  const [questions, setQuestions] = useState<any>(null);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const changeStatus = useQuizConfig((state: any) => state.changeStatus);
-  const config = useQuizConfig((state: any) => state.config);
-  const addLevel = useQuizConfig((state: any) => state.addLevel);
-  const addCategory = useQuizConfig((state: any) => state.addCategory);
-  const addType = useQuizConfig((state: any) => state.addType);
-  const addQuestionNumber = useQuizConfig((state: any) => state.addQuestionNumber);
-  const setScore = useQuizConfig((state: any) => state.setScore);
+  const changeStatus = useQuizConfig((state:any) => state.changeStatus);
+  const config = useQuizConfig((state:any) => state.config);
+  const addLevel = useQuizConfig((state:any) => state.addLevel);
+  const addCategory = useQuizConfig((state:any) => state.addCategory);
+  const addType = useQuizConfig((state:any) => state.addType);
+  const addQuestionNumber = useQuizConfig((state:any) => state.addQuestionNumber);
+  const setScore = useQuizConfig((state:any) => state.setScore);
 
   useEffect(() => {
     async function getQuestions() {
       setLoading(true);
-      try {
-        const response = await fetch(
+      const { results } = await (
+        await fetch(
           `https://opentdb.com/api.php?amount=${config.numberOfQuestion}&category=${config.category.id}&difficulty=${config.level}&type=${config.type}`
-        );
-        const data = await response.json();
-        const { results } = data;
-
-        if (results && Array.isArray(results)) {
-          const shuffledResults = results.map((e: questionT) => {
-            const value = [...e.incorrect_answers, e.correct_answer]
-              .map((value) => ({ value, sort: Math.random() }))
-              .sort((a, b) => a.sort - b.sort)
-              .map(({ value }) => value);
-            e.answers = [...value];
-            return e;
-          });
-          console.log(shuffledResults, "shuffled");
-          setQuestions([...shuffledResults]);
-        } else {
-          console.error('Results are not an array or undefined');
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
+        )
+      ).json();
+      console.log(results)
+      let shuffledResults = results.map((e:questionT) => {
+        let value = [...e.incorrect_answers, e.correct_answer]
+          .map((value) => ({ value, sort: Math.random() }))
+          .sort((a, b) => a.sort - b.sort)
+          .map(({ value }) => value);
+        e.answers = [...value];
+        return e;
+      });
+      console.log(shuffledResults, "shuffeled");
+      setQuestions([...shuffledResults]);
+      setLoading(false);
     }
     getQuestions();
   }, [config.category, config.level, config.numberOfQuestion, config.type]);
 
   const answerCheck = (ans: string) => {
-    if (ans === questions?.[0].correct_answer) {
+    if (ans === questions[0].correct_answer) {
       setScore();
     }
-    setAnswer(questions?.[0].correct_answer || "");
+    setAnswer(questions[0].correct_answer);
   };
-
   const handleNext = () => {
-    if (questions) {
-      const remainingQuestions = [...questions];
-      remainingQuestions.shift();
-      setQuestions([...remainingQuestions]);
-      setAnswer("");
-    }
+    let remainingQuestions = [...questions];
+    remainingQuestions.shift();
+    setQuestions([...remainingQuestions]);
+    setAnswer("");
   };
 
   return (
@@ -133,7 +115,7 @@ export default function Quiz() {
             {questions[0].question}
           </h4>
           <div className="flex justify-evenly items-center w-full my-20 flex-wrap">
-            {questions[0].answers.map((e: string) => {
+            {questions[0].answers.map((e:string) => {
               return (
                 <button
                   key={e}
